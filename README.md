@@ -1,5 +1,6 @@
 # zenhub-card-movement-webhook
 [![License](https://img.shields.io/github/license/keighrim/zenhub-card-movement-webhook.svg?style=popout-square)](LICENSE) 
+[![Version](https://img.shields.io/github/tag/keighrim/zenhub-card-movement-webhook.svg?style=popout-square)](https://github.com/keighrim/zenhub-card-movement-webhook/tags) 
 
 ## Features 
 
