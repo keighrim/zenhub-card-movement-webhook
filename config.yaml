@@ -1,0 +1,10 @@
+ZENHUB_TOKEN:
+GITHUB_TOKEN:
+GITHUB_WEBHOOK_SECRET:
+is_reopened:
+is_closed:
+pr_opened:
+pr_revreq:
+pr_merged:
+pr_closed:
+new_branch:
