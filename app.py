@@ -80,7 +80,12 @@ def process_github_request():
     payload = request.get_json()
     if payload is None:  # request body is not json
         return Response(status=415)
-    repo_id = get_repo_id_from_gh_req(payload)
+    try:
+        repo_id = get_repo_id_from_gh_req(payload)
+    except KeyError:
+        # Reqeust passed the security check, but does not contain proper contents 
+        # (likely the first "init" delivery)
+        return Resonse(status=200)
     if len(app.config["zh_column_ids"]) == 0:
         cache_zh_column_ids(repo_id)
     if event_name == "issues":
