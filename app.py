@@ -86,44 +86,51 @@ def process_github_request():
     except KeyError:
         # Reqeust passed the security check, but does not contain proper contents 
         # (likely the first "init" delivery)
-        return Resonse(status=200)
+        return Response(status=200)
     if len(app.config["zh_column_ids"]) == 0:
         cache_zh_column_ids(repo_id)
     if event_name == "issues":
         issue_num = get_num_from_gh_req(payload)
-        if payload["action"] == "reopened" and app.config["is_reopened"]:
+        if payload["action"] == "reopened" and "is_reopened" in app.config:
             print("An issue is re-opened")
             response = move_card_on_zh(repo_id, issue_num, app.config["is_reopened"])
-        elif payload["action"] == "closed" and app.config["is_closed"]:
+        elif payload["action"] == "closed" and "is_closed" in app.config:
             print("An issue is closed")
             response = move_card_on_zh(repo_id, issue_num, app.config["is_closed"])
     elif event_name == "pull_request":
         issue_num = get_num_from_gh_req(payload)
-        if payload["action"] == "opened" and app.config["pr_opened"]:
+        if payload["action"] == "opened" and "pr_opened" in app.config:
             print("A pull request is opened")
             response = move_card_on_zh(repo_id, issue_num, app.config["pr_opened"])
-        elif payload["action"] == "review_requested" and app.config["pr_revreq"]:
+        elif payload["action"] == "reopened" and "pr_reopened" in app.config:
+            print("A pull request is re-opened")
+            response = move_card_on_zh(repo_id, issue_num, app.config["pr_opened"])
+        elif payload["action"] == "review_requested" and "pr_revreq" in app.config:
             print("Review requested for a pull request")
             response = move_card_on_zh(repo_id, issue_num, app.config["pr_revreq"])
         elif payload["action"] == "closed":
-            if payload["pull_request"]["merged"] and app.config["pr_merged"]:
+            if payload["pull_request"]["merged"] and "pr_merged" in app.config:
                 print("A pull request is merged")
                 response = move_card_on_zh(repo_id, issue_num, app.config["pr_merged"])
-            elif not payload["pull_request"]["merged"] and app.config["pr_closed"]:
+            elif not payload["pull_request"]["merged"] and "pr_closed" in app.config:
                 print("A pull request is closed without merge")
                 response = move_card_on_zh(repo_id, issue_num, app.config["pr_closed"])
     elif event_name == "create":
-        if payload["ref_type"] == "branch" and app.config["new_branch"]:
+        if payload["ref_type"] == "branch" and "new_branch" in app.config:
             branch_formatted = re.match(r'([0-9]+)-', payload["ref"])
             if branch_formatted:
                 issue_num = branch_formatted.group(1)
                 repo_fullname = get_repo_fullname_from_gh_req(payload)
                 print("#{} related branch is pushed by `{}`".format(issue_num, payload["sender"]["login"]))
                 response = move_card_on_zh(repo_id, issue_num, app.config["new_branch"])
-                assign_issue_to_on_gh(repo_fullname, issue_num, payload["sender"]["login"])
+                if response.status_code == 200: 
+                    assign_issue_to_on_gh(repo_fullname, issue_num, payload["sender"]["login"])
     else:
         return Response(status=200)
-    return response.content, response.status_code, response.headers.items()
+    try:
+        return response.content, response.status_code, response.headers.items()
+    except UnboundLocalError:
+        return Response(status=204, response="Request seems not so interesting.")
 
 
 def validate_github_request(req):
@@ -166,6 +173,7 @@ if __name__ == '__main__':
     with open(args.config, "r") as config_file:
         config_dict = yaml.load(config_file)
         for k, v in config_dict.items():
+            to_pop = []
             if k in ["ZENHUB_TOKEN", "GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"] and (v is None or len(v) == 0):
                 from_envvir = os.environ.get(k)
                 if from_envvir is None or len(from_envvir) == 0:
@@ -173,7 +181,9 @@ if __name__ == '__main__':
                 else:
                     config_dict[k] = from_envvir
             elif v is None or len(v) == 0:
-                config_dict[k] = False
+                to_pop.append(k)
+        for k in to_pop:
+            config_dict.pop(k)
         app.config.update(config_dict)
         app.config["zh_column_ids"] = {}
 

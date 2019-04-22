@@ -6,19 +6,23 @@
 
 This is a A HTTP server written in Python 3 with [flask framework](http://flask.pocoo.org/) to create a webhook between Zenhub and Github that mimics ["automation" features](https://help.github.com/en/articles/configuring-automation-for-project-boards) from the github project.
 #### Github automation 
-Currently the app implements all of github's features with a couple of exceptions. See this table. 
+Currently the app implements all of github's features with some exceptions due to limitations of APIs. See this table. 
 
 | Automation | Support? | config-key |
 | --- | --- | :---: |
-| Add to X when a new issue submitted | by Zenhub as default | - |
+| Add to X when a new issue submitted | `&` | - |
 | Move to X when an issue reopend | O | `is_reopened` |
 | Add to X when a new PR is open | O | `pr_opened` |
 | Move to X when a PR is reopened | O | `pr_reopened` |
-| Move to X when a PR gets approved (by reviewers) | X (github API not supported) | - |
+| Move to X when a PR gets approved (by reviewers) | `X` | - |
 | Move to X when reviews requested on a PR | O | `pr_revreq` |
-| Move to X when an issue is closed | O | `is_closed` |
-| Move to X when a PR is merged | O | `pr_merged` |
-| Move to X when a PR is closed w/o merging | O | `pr_closed` |
+| Move to X when an issue is closed | `%` | `is_closed` |
+| Move to X when a PR is merged | `%` | `pr_merged` |
+| Move to X when a PR is closed w/o merging | `%` | `pr_closed` |
+
+* `X` - github API not supported
+* `&` - New issues always go to the first column in Zenhub board by default. 
+* `%` - Closed issues and PRs will be moved by Zenhub to "Closed" and can't be moved further unless re-opened. 
 
 #### One more thing. 
 Additionally, the app supports automated movement + assignment of an issue card when a branch whose name starts with `issueNum-` is newly created. For instance, when a new branch `13-bugfix` pushed, the webhook will move issue #13 card to the designated column (see below) and assign the issue to the pusher of the branch. The config-key for this automation is `new_branch`. Note that the "*assigner*" will be the owner of github access token. That is, in the github issue thread, a message saying `${assigner} assigned ${assignee} ${some_time} ago`, where the assigner is the token owenr and the assignee is the puhser, will show up. So for organizational usage, it is recommended to have a dummy administrative account to appear as the automated assigner.  
