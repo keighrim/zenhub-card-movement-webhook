@@ -82,6 +82,7 @@ def process_github_request():
         return Response(status=415)
     try:
         repo_id = get_repo_id_from_gh_req(payload)
+        print(repo_id)
     except KeyError:
         # Reqeust passed the security check, but does not contain proper contents 
         # (likely the first "init" delivery)
@@ -91,29 +92,38 @@ def process_github_request():
     if event_name == "issues":
         issue_num = get_num_from_gh_req(payload)
         if payload["action"] == "reopened" and app.config["is_reopened"]:
+            print("An issue is re-opened")
             response = move_card_on_zh(repo_id, issue_num, app.config["is_reopened"])
         elif payload["action"] == "closed" and app.config["is_closed"]:
+            print("An issue is closed")
             response = move_card_on_zh(repo_id, issue_num, app.config["is_closed"])
     elif event_name == "pull_request":
         issue_num = get_num_from_gh_req(payload)
         if payload["action"] == "opened" and app.config["pr_opened"]:
+            print("A pull request is opened")
             response = move_card_on_zh(repo_id, issue_num, app.config["pr_opened"])
         elif payload["action"] == "review_requested" and app.config["pr_revreq"]:
+            print("Review requested for a pull request")
             response = move_card_on_zh(repo_id, issue_num, app.config["pr_revreq"])
         elif payload["action"] == "closed":
             if payload["pull_request"]["merged"] and app.config["pr_merged"]:
+                print("A pull request is merged")
                 response = move_card_on_zh(repo_id, issue_num, app.config["pr_merged"])
             elif not payload["pull_request"]["merged"] and app.config["pr_closed"]:
+                print("A pull request is closed without merge")
                 response = move_card_on_zh(repo_id, issue_num, app.config["pr_closed"])
     elif event_name == "create":
         if payload["ref_type"] == "branch" and app.config["new_branch"]:
-            branch_formatted = re.match(r'([0-9])+-', payload["ref"])
+            branch_formatted = re.match(r'([0-9]+)-', payload["ref"])
             if branch_formatted:
                 issue_num = branch_formatted.group(1)
                 repo_fullname = get_repo_fullname_from_gh_req(payload)
+                print("#{} related branch is pushed by `{}`".format(issue_num, payload["sender"]["login"]))
                 response = move_card_on_zh(repo_id, issue_num, app.config["new_branch"])
                 assign_issue_to_on_gh(repo_fullname, issue_num, payload["sender"]["login"])
-    return Response(status=200)
+    else:
+        return Response(status=200)
+    return response.content, response.status_code, response.headers.items()
 
 
 def validate_github_request(req):
