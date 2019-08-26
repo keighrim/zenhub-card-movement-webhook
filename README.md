@@ -35,24 +35,24 @@ Additionally, the app supports automated movement + assignment of an issue card 
     * `ZENHUB_TOKEN` : Zenhub board access token. Can obtain [here](https://app.zenhub.com/dashboard/tokens).
     * `GITHUB_TOKEN` : Github access token. See [this](https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line) to get one. 
     * `GITHUB_WEBHOOK_SECRET` : A hash key to to compute hashes of requests from github. See [here](https://developer.github.com/webhooks/securing/#setting-your-secret-token) for details. If you set up a multi-repository or cross organization Zenhub board, we need to use the same secret key for all connected github repositories or github organization. 
+        * Above three can be passed as environmental variables (values in `config.yaml` take priority, though). When storing tokens in `config.yaml` files, **be careful not to push your access tokens to a public repository.**
     * `is_reopened`, `is_closed` , `pr_opened` , `pr_revreq` , `pr_merged` , `pr_closed` , `new_branch` : Fill in with target Zenhub board column (or *pipeline*) names for each automation condition. Don't forget to double-quote names that include spaces. If left empty, the automation conditioned on those will be disabled. 
-1. **Be careful not to push your access tokens to a public repository.** If you don't want to use app config file to store access tokens, use system environment variables with the same names. 
 1. Runtime arguments
-```
-usage: app.py [-h] [-d] [-p [PORT]] [-c [CONFIG]]
+   ```
+   usage: app.py [-h] [-d] [-p [PORT]] [-c [CONFIG]]
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -d, --debug           Run the flask app in debugging mode
-  -p [PORT], --port [PORT]
-                        Set port to listen. Default is 5000. When deployed on
-                        heroku, use the env-var $PORT
-  -c [CONFIG], --config [CONFIG]
-                        A file path to the config YAML file. By default the
-                        app will look for `config.yaml` in the working
-                        directory.
-```
-1. Example command
+   optional arguments:
+     -h, --help            show this help message and exit
+     -d, --debug           Run the flask app in debugging mode
+     -p [PORT], --port [PORT]
+                           Set port to listen. Default is 5000. When deployed on
+                           heroku, use the env-var $PORT
+     -c [CONFIG], --config [CONFIG]
+                           A file path to the config YAML file. By default the
+                           app will look for `config.yaml` in the working
+                           directory.
+   ```
+#### Example command
 ```
 GITHUB_TOKEN=SomeGithubToken ZENHUB_TOKEN=SomeZenhubTokenUsuallyLongerThanGitHubOne python3 app.py -p $PORT
 ```
@@ -67,5 +67,5 @@ Add a webhook as follows using github web interface or API on repository level o
 * Secret: the secret key you use as `GITHUB_WEBHOOK_SECRET`
 * events: to minimize traffic load, pick `Branch or tag creation`, `Issue`, `Pull Requests`
     
-##### The app only supports a single Zenhub board at a time. In other words, you need to have one instance of the webhook server for one Zenhub board. However, a single Zenhub board can be connect to a multiple github repositories across multiple organizations. in which case you need to hook all repositories (or organizations) to the server.
+##### The app only supports a single Zenhub board at a time. In other words, you need to have one instance of the webhook server for one Zenhub board. However, a single Zenhub board can connect multiple github repositories across multiple organizations, in which case you need to hook all repositories (or organizations) to the webhook server.
 
