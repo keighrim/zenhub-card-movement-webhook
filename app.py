@@ -124,7 +124,7 @@ def process_github_request():
                 print("#{} related branch is pushed by `{}`".format(issue_num, payload["sender"]["login"]))
                 response = move_card_on_zh(repo_id, issue_num, app.config["new_branch"])
                 if response.status_code == 200: 
-                    assign_issue_to_on_gh(repo_fullname, issue_num, payload["sender"]["login"])
+                    response = assign_issue_to_on_gh(repo_fullname, issue_num, payload["sender"]["login"])
     else:
         return Response(status=200)
     try:
