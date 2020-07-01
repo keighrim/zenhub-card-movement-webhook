@@ -4,6 +4,7 @@ import requests
 import yaml
 import re
 import json
+import sys
 import os
 from flask import Flask, request, Response
 
@@ -127,6 +128,7 @@ def process_github_request():
                     response = assign_issue_to_on_gh(repo_fullname, issue_num, payload["sender"]["login"])
     else:
         return Response(status=200)
+    sys.stdout.flush()
     try:
         return response.content, response.status_code, response.headers.items()
     except UnboundLocalError:
