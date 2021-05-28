@@ -100,9 +100,13 @@ def process_github_request():
             response = move_card_on_zh(repo_id, issue_num, app.config["is_closed"])
     elif event_name == "pull_request":
         issue_num = get_num_from_gh_req(payload)
-        if payload["action"] == "opened" and "pr_opened" in app.config:
-            print("A pull request is opened")
-            response = move_card_on_zh(repo_id, issue_num, app.config["pr_opened"])
+        if payload["action"] == "opened":
+            if len(payload['pull_request']['requested_reviewers']) > 0 and 'pr_revreq' in app.config:
+                print("A pull request is opened and review requested")
+                response = move_card_on_zh(repo_id, issue_num, app.config["pr_revreq"])
+            elif "pr_opened" in app.config:
+                print("A pull request is opened")
+                response = move_card_on_zh(repo_id, issue_num, app.config["pr_opened"])
         elif payload["action"] == "reopened" and "pr_reopened" in app.config:
             print("A pull request is re-opened")
             response = move_card_on_zh(repo_id, issue_num, app.config["pr_opened"])
